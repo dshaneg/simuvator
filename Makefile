@@ -43,7 +43,8 @@ clean:
 
 .PHONY: info
 info:
-	@echo "Version:          $(VERSION)"
-	@echo "Git Tag:          $(GIT_TAG)"
-	@echo "Git Commit:       $(GIT_COMMIT)"
-	@echo "Git Tree State:   $(GIT_DIRTY)"
+	@echo "Version:        $(VERSION)"
+	@echo "Git Tag:        $(GIT_TAG)"
+	@echo "Git Commit:     $(GIT_COMMIT)"
+	@echo "Git Sha:        $(GIT_SHA)"
+	@echo "Git Tree State: $(GIT_DIRTY)"
