@@ -32,7 +32,56 @@ func NewCar(
 }
 
 func (c *Car) Score(floor int, direction Direction) int {
-	return floor
+	distance := c.findDistance(floor)
+	stops := c.countStops()
+
+	return distance + stops*5
+}
+
+func (c *Car) countStops() int {
+	stops := 0
+	for _, pressed := range c.buttons {
+		if pressed {
+			stops++
+		}
+	}
+	return stops
+}
+
+func (c *Car) findDistance(floor int) int {
+	distance := 0
+	switch {
+	case floor < c.currentFloor:
+		if c.direction == Up {
+			distance += (c.topStop() - c.currentFloor) * 2
+		}
+		distance += c.currentFloor - floor
+	case floor > c.currentFloor:
+		if c.direction == Down {
+			distance += (c.currentFloor - c.bottomStop()) * 2
+		}
+		distance += floor - c.currentFloor
+	}
+
+	return distance
+}
+
+func (c *Car) bottomStop() int {
+	for i, pressed := range c.buttons {
+		if pressed {
+			return i
+		}
+	}
+	return 0
+}
+
+func (c *Car) topStop() int {
+	for i := len(c.buttons) - 1; i >= 0; i-- {
+		if c.buttons[i] {
+			return i
+		}
+	}
+	return len(c.buttons) - 1
 }
 
 func (c *Car) Call(floor int) []bool {

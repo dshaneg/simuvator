@@ -23,7 +23,6 @@ GIT_DIRTY = $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "
 
 .PHONY: build
 build: $(BINDIR)/$(BINNAME)
-	go build .
 
 $(BINDIR)/$(BINNAME): $(SRC)
 	go build $(GOFLAGS) -o '$(BINDIR)'/$(BINNAME) ./cmd/simuvator
@@ -43,7 +42,6 @@ clean:
 
 .PHONY: info
 info:
-	@echo "Version:        $(VERSION)"
 	@echo "Git Tag:        $(GIT_TAG)"
 	@echo "Git Commit:     $(GIT_COMMIT)"
 	@echo "Git Sha:        $(GIT_SHA)"
