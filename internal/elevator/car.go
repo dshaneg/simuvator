@@ -3,32 +3,146 @@ package elevator
 type Direction int
 
 const (
-	Down Direction = iota - 1
-	Stopped
+	Down Direction = iota
 	Up
 )
 
+type Status int
+
+const (
+	Parked Status = iota
+	Loading
+	Traveling
+)
+
 type Car struct {
-	buttons      []bool
-	currentFloor int
-	direction    Direction
+	buttons   []bool
+	floor     int
+	direction Direction
+	status    Status
 }
 
-func NewCar(
-	numFloors int,
-	currentFloor int,
-	direction Direction,
-	currentCalls []int,
-) *Car {
+type CarSettings struct {
+	Floor     int
+	Direction Direction
+	Status    Status
+	Calls     []int
+}
+
+func NewCar(numFloors int, settings CarSettings) *Car {
 	car := Car{
-		buttons:      make([]bool, numFloors),
-		currentFloor: currentFloor,
-		direction:    direction,
+		buttons:   make([]bool, numFloors),
+		floor:     settings.Floor,
+		direction: settings.Direction,
+		status:    settings.Status,
 	}
-	for _, floor := range currentCalls {
+	for _, floor := range settings.Calls {
 		car.buttons[floor] = true
 	}
 	return &car
+}
+
+func (c *Car) Floor() int {
+	return c.floor
+}
+
+func (c *Car) Direction() Direction {
+	return c.direction
+}
+
+func (c *Car) Status() Status {
+	return c.status
+}
+
+func (c *Car) Calls() []int {
+	calls := []int{}
+	for floor, called := range c.buttons {
+		if called {
+			calls = append(calls, floor)
+		}
+	}
+	return calls
+}
+
+func (c *Car) Tick() {
+	targetFloor := c.calculateTargetFloor()
+
+	c.updateDirection(targetFloor)
+	c.updateFloor(targetFloor)
+
+	if targetFloor == c.floor {
+		c.clearCall(targetFloor)
+
+		targetFloor = c.calculateTargetFloor()
+		c.updateDirection(targetFloor)
+	}
+
+}
+
+func (c *Car) clearCall(floor int) {
+	c.buttons[floor] = false
+}
+
+func (c *Car) updateFloor(targetFloor int) {
+	if targetFloor > c.floor {
+		c.floor++
+	} else if targetFloor < c.floor {
+		c.floor--
+	}
+}
+
+func (c *Car) updateDirection(targetFloor int) {
+	if c.direction == Up && targetFloor < c.floor {
+		c.direction = Down
+	} else if c.direction == Down && targetFloor > c.floor {
+		c.direction = Up
+	}
+}
+
+func (c *Car) calculateTargetFloor() (target int) {
+	if c.direction == Up {
+		target, found := c.findNextUpCall()
+		if found {
+			return target
+		} else {
+			target, found = c.findNextDownCall()
+			if found {
+				return target
+			}
+		}
+	}
+
+	// down
+	target, found := c.findNextDownCall()
+	if found {
+		return target
+	} else {
+		target, found = c.findNextUpCall()
+		if found {
+			return target
+		}
+	}
+
+	// no calls
+	return c.floor
+}
+
+func (c *Car) findNextDownCall() (target int, found bool) {
+	for i := c.floor; i >= 0; i-- {
+		if c.buttons[i] {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
+func (c *Car) findNextUpCall() (target int, found bool) {
+	for i := c.floor; i < len(c.buttons); i++ {
+		if c.buttons[i] {
+			return i, true
+		}
+	}
+	return 0, false
 }
 
 func (c *Car) Score(floor int, direction Direction) int {
@@ -51,16 +165,16 @@ func (c *Car) countStops() int {
 func (c *Car) findDistance(floor int) int {
 	distance := 0
 	switch {
-	case floor < c.currentFloor:
+	case floor < c.floor:
 		if c.direction == Up {
-			distance += (c.topStop() - c.currentFloor) * 2
+			distance += (c.topStop() - c.floor) * 2
 		}
-		distance += c.currentFloor - floor
-	case floor > c.currentFloor:
+		distance += c.floor - floor
+	case floor > c.floor:
 		if c.direction == Down {
-			distance += (c.currentFloor - c.bottomStop()) * 2
+			distance += (c.floor - c.bottomStop()) * 2
 		}
-		distance += floor - c.currentFloor
+		distance += floor - c.floor
 	}
 
 	return distance
