@@ -32,9 +32,13 @@ $(BINDIR)/$(BINNAME): $(SRC)
 
 .PHONY: test
 test:
-	go test ./...
+	go test -v ./...
 
 # -------
+
+.PHONY: run
+run:
+	go run ./cmd/simuvator
 
 .PHONY: clean
 clean:

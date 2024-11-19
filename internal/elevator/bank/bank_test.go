@@ -1,26 +1,20 @@
-package elevator_test
+package bank_test
 
 import (
 	"testing"
 
-	"github.com/dshaneg/elevator/internal/elevator"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/dshaneg/elevator/internal/elevator/bank"
+	"github.com/dshaneg/elevator/internal/elevator/bank/stubs"
+	"github.com/dshaneg/elevator/internal/elevator/car"
 )
 
-type CarStub struct {
-	score int
-}
-
-func (car CarStub) Score(floor int, direction elevator.Direction) int {
-	return car.score
-}
-
 func TestCallError(t *testing.T) {
-	cars := []elevator.Scorer{}
-	_, err := elevator.NewBank(5, cars)
+	cars := []bank.Member{}
+	_, err := bank.New(5, cars)
 
-	if err == nil {
-		t.Error("expected an error but did not get one")
-	}
+	assert.Error(t, err)
 }
 
 var bankCases = []struct {
@@ -58,21 +52,29 @@ var bankCases = []struct {
 func TestCall(t *testing.T) {
 	for _, tc := range bankCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cars := []elevator.Scorer{}
+			cars := []bank.Member{}
 			for _, score := range tc.scores {
-				cars = append(cars, CarStub{score})
+				cars = append(
+					cars,
+					stubs.NewCar(score),
+				)
 			}
 
-			b, err := elevator.NewBank(tc.numFloors, cars)
-			if err != nil {
-				t.Errorf("did not expect an error, but got %v", err)
-			}
+			b, err := bank.New(tc.numFloors, cars)
+			assert.NoError(t, err)
 
 			// neither parameter matters since using a stub
-			got := b.Call(0, elevator.Up)
-			if got != tc.expectedCarIndex {
-				t.Errorf("expected %v, got %v", tc.expectedCarIndex, got)
-			}
+			got := b.Call(0, car.Up)
+			assert.Equal(t, tc.expectedCarIndex, got)
 		})
 	}
+}
+
+func TestCallCallsCarCall(t *testing.T) {
+	c := stubs.NewCar(0)
+	b, err := bank.New(5, []bank.Member{c})
+	assert.NoError(t, err)
+
+	b.Call(0, car.Up)
+	assert.Equal(t, 1, c.CallCount)
 }

@@ -1,10 +1,12 @@
-package elevator_test
+package car_test
 
 import (
 	"slices"
 	"testing"
 
-	"github.com/dshaneg/elevator/internal/elevator"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/dshaneg/elevator/internal/elevator/car"
 )
 
 var scoreCases = []struct {
@@ -12,10 +14,10 @@ var scoreCases = []struct {
 	numFloors        int
 	currentCalls     []int
 	currentFloor     int
-	currentDirection elevator.Direction
-	currentStatus    elevator.Status
+	currentDirection car.Direction
+	currentStatus    car.Status
 	callFloor        int
-	callDirection    elevator.Direction
+	callDirection    car.Direction
 	expected         int
 }{
 	{
@@ -24,9 +26,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{},
 		currentFloor:     0,
-		currentDirection: elevator.Up,
+		currentDirection: car.Up,
 		callFloor:        1,
-		callDirection:    elevator.Up,
+		callDirection:    car.Up,
 		expected:         1,
 	},
 	{
@@ -35,9 +37,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{},
 		currentFloor:     0,
-		currentDirection: elevator.Up,
+		currentDirection: car.Up,
 		callFloor:        2,
-		callDirection:    elevator.Up,
+		callDirection:    car.Up,
 		expected:         2,
 	},
 	{
@@ -49,9 +51,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{2},
 		currentFloor:     0,
-		currentDirection: elevator.Up,
+		currentDirection: car.Up,
 		callFloor:        3,
-		callDirection:    elevator.Up,
+		callDirection:    car.Up,
 		expected:         8,
 	},
 	{
@@ -62,9 +64,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{4},
 		currentFloor:     2,
-		currentDirection: elevator.Up,
+		currentDirection: car.Up,
 		callFloor:        0,
-		callDirection:    elevator.Down, // irrelevant so far
+		callDirection:    car.Down, // irrelevant so far
 		expected:         11,
 	},
 	{
@@ -75,9 +77,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{0},
 		currentFloor:     2,
-		currentDirection: elevator.Down,
+		currentDirection: car.Down,
 		callFloor:        4,
-		callDirection:    elevator.Down,
+		callDirection:    car.Down,
 		expected:         11,
 	},
 	{
@@ -87,9 +89,9 @@ var scoreCases = []struct {
 		numFloors:        5,
 		currentCalls:     []int{},
 		currentFloor:     2,
-		currentDirection: elevator.Down,
+		currentDirection: car.Down,
 		callFloor:        2,
-		callDirection:    elevator.Down,
+		callDirection:    car.Down,
 		expected:         0,
 	},
 }
@@ -97,18 +99,15 @@ var scoreCases = []struct {
 func TestScore(t *testing.T) {
 	for _, tc := range scoreCases {
 		t.Run(tc.name, func(t *testing.T) {
-			settings := elevator.CarSettings{
-				Floor:     tc.currentFloor,
-				Direction: tc.currentDirection,
-				Status:    tc.currentStatus,
-				Calls:     tc.currentCalls,
-			}
-			c := elevator.NewCar(tc.numFloors, settings)
+			c := car.NewCar(tc.numFloors,
+				car.WithFloor(tc.currentFloor),
+				car.WithDirection(tc.currentDirection),
+				car.WithStatus(tc.currentStatus),
+				car.WithCalls(tc.currentCalls),
+			)
 
 			got := c.Score(tc.callFloor, tc.callDirection)
-			if got != tc.expected {
-				t.Errorf("expected %v, got %v", tc.expected, got)
-			}
+			assert.Equal(t, tc.expected, got)
 		})
 	}
 }
@@ -118,12 +117,12 @@ var tickCases = []struct {
 	numFloors         int
 	currentCalls      []int
 	currentFloor      int
-	currentDirection  elevator.Direction
-	currentStatus     elevator.Status
+	currentDirection  car.Direction
+	currentStatus     car.Status
 	expectedFloor     int
-	expectedDirection elevator.Direction
+	expectedDirection car.Direction
 	expectedCalls     []int
-	expectedStatus    elevator.Status
+	expectedStatus    car.Status
 }{
 	{
 		// 2 -> 2
@@ -131,9 +130,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{},
 		currentFloor:      2,
-		currentDirection:  elevator.Up,
+		currentDirection:  car.Up,
 		expectedFloor:     2,
-		expectedDirection: elevator.Up,
+		expectedDirection: car.Up,
 		expectedCalls:     []int{},
 	},
 	{
@@ -142,9 +141,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{3},
 		currentFloor:      2,
-		currentDirection:  elevator.Up,
+		currentDirection:  car.Up,
 		expectedFloor:     3,
-		expectedDirection: elevator.Up,
+		expectedDirection: car.Up,
 		expectedCalls:     []int{},
 	},
 	{
@@ -153,9 +152,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{3},
 		currentFloor:      2,
-		currentDirection:  elevator.Down,
+		currentDirection:  car.Down,
 		expectedFloor:     3,
-		expectedDirection: elevator.Up,
+		expectedDirection: car.Up,
 		expectedCalls:     []int{},
 	},
 	{
@@ -163,9 +162,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{0, 4},
 		currentFloor:      2,
-		currentDirection:  elevator.Up,
+		currentDirection:  car.Up,
 		expectedFloor:     3,
-		expectedDirection: elevator.Up,
+		expectedDirection: car.Up,
 		expectedCalls:     []int{0, 4},
 	},
 	{
@@ -173,9 +172,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{0, 4},
 		currentFloor:      3,
-		currentDirection:  elevator.Up,
+		currentDirection:  car.Up,
 		expectedFloor:     4,
-		expectedDirection: elevator.Down,
+		expectedDirection: car.Down,
 		expectedCalls:     []int{0},
 	},
 	{
@@ -183,9 +182,9 @@ var tickCases = []struct {
 		numFloors:         5,
 		currentCalls:      []int{0, 4},
 		currentFloor:      1,
-		currentDirection:  elevator.Down,
+		currentDirection:  car.Down,
 		expectedFloor:     0,
-		expectedDirection: elevator.Up,
+		expectedDirection: car.Up,
 		expectedCalls:     []int{4},
 	},
 }
@@ -193,26 +192,19 @@ var tickCases = []struct {
 func TestTick(t *testing.T) {
 	for _, tc := range tickCases {
 		t.Run(tc.name, func(t *testing.T) {
-			settings := elevator.CarSettings{
-				Floor:     tc.currentFloor,
-				Direction: tc.currentDirection,
-				Status:    tc.currentStatus,
-				Calls:     tc.currentCalls,
-			}
-			c := elevator.NewCar(tc.numFloors, settings)
+			c := car.NewCar(tc.numFloors,
+				car.WithFloor(tc.currentFloor),
+				car.WithDirection(tc.currentDirection),
+				car.WithStatus(tc.currentStatus),
+				car.WithCalls(tc.currentCalls),
+			)
 
 			c.Tick()
 
-			if c.Floor() != tc.expectedFloor {
-				t.Errorf("expected floor %v, got %v", tc.expectedFloor, c.Floor())
-			}
-			if c.Direction() != tc.expectedDirection {
-				t.Errorf("expected direction %v, got %v", tc.expectedDirection, c.Direction())
-			}
+			assert.Equal(t, tc.expectedFloor, c.Floor())
+			assert.Equal(t, tc.expectedDirection, c.Direction())
 			calls := c.Calls()
-			if !equalUnsorted(tc.expectedCalls, calls) {
-				t.Errorf("expected calls %v, got %v", tc.expectedCalls, calls)
-			}
+			assert.True(t, equalUnsorted(tc.expectedCalls, calls))
 		})
 	}
 }
@@ -225,10 +217,8 @@ func equalUnsorted(s1, s2 []int) bool {
 
 func TestCallFloorSetsCallButton(t *testing.T) {
 	const numFloors = 10
-	c := elevator.NewCar(numFloors, elevator.CarSettings{})
+	c := car.NewCar(numFloors)
 	calls := c.Call(2)
 	expected := []bool{false, false, true, false, false, false, false, false, false, false}
-	if !slices.Equal(expected, calls) {
-		t.Errorf("expected %v, got %v", expected, calls)
-	}
+	assert.Equal(t, expected, calls)
 }

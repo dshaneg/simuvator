@@ -10,3 +10,5 @@ Eventually I want some realtime visualization. Also, should be able to speed up 
 ----
 
 what about direction when a floor above a car is called for down, but no other calls have been made--the car will need to go up to answer the call, but report down to the calling floor...
+
+[Glossary of Elevator Terms](https://www.embreeelevator.com/glossary-of-terms/)

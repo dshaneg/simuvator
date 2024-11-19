@@ -1,12 +1,14 @@
-package elevator
+package car
 
+// Direction is an enum type that represents the current direction of the [Car].
 type Direction int
 
 const (
-	Down Direction = iota
-	Up
+	Down Direction = -1
+	Up   Direction = 1
 )
 
+// Status is an enum type that represents the current status of the Car.
 type Status int
 
 const (
@@ -22,24 +24,52 @@ type Car struct {
 	status    Status
 }
 
-type CarSettings struct {
-	Floor     int
-	Direction Direction
-	Status    Status
-	Calls     []int
-}
+// Option is a functional option type that allows us to configure the Car
+type Option func(*Car)
 
-func NewCar(numFloors int, settings CarSettings) *Car {
+func NewCar(numFloors int, options ...Option) *Car {
 	car := Car{
 		buttons:   make([]bool, numFloors),
-		floor:     settings.Floor,
-		direction: settings.Direction,
-		status:    settings.Status,
+		floor:     0,
+		direction: Up,
+		status:    Parked,
 	}
-	for _, floor := range settings.Calls {
-		car.buttons[floor] = true
+
+	for _, opt := range options {
+		opt(&car)
 	}
+
 	return &car
+}
+
+// WithFloor is a functional option that sets the current floor of the Car.
+func WithFloor(currentFloor int) Option {
+	return func(c *Car) {
+		c.floor = currentFloor
+	}
+}
+
+// WithDirection is a functional option that sets the current direction of the Car.
+func WithDirection(direction Direction) Option {
+	return func(c *Car) {
+		c.direction = direction
+	}
+}
+
+// WithStatus is a functional option that sets the current status of the Car.
+func WithStatus(status Status) Option {
+	return func(c *Car) {
+		c.status = status
+	}
+}
+
+// WithCalls is a functional option that sets the current calls of the Car.
+func WithCalls(calls []int) Option {
+	return func(c *Car) {
+		for _, floor := range calls {
+			c.buttons[floor] = true
+		}
+	}
 }
 
 func (c *Car) Floor() int {
@@ -145,6 +175,11 @@ func (c *Car) findNextUpCall() (target int, found bool) {
 	return 0, false
 }
 
+func (c *Car) Call(floor int) []bool {
+	c.buttons[floor] = true
+	return c.buttons
+}
+
 func (c *Car) Score(floor int, direction Direction) int {
 	distance := c.findDistance(floor)
 	stops := c.countStops()
@@ -196,9 +231,4 @@ func (c *Car) topStop() int {
 		}
 	}
 	return len(c.buttons) - 1
-}
-
-func (c *Car) Call(floor int) []bool {
-	c.buttons[floor] = true
-	return c.buttons
 }
